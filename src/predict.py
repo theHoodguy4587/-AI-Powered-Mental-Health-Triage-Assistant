@@ -51,4 +51,4 @@ if __name__ == "__main__":
     print("Prediction:", pred)
 
     if conf is not None:
-        print("Confidence:", round(conf * 100, 2), "")
+        print("Confidence:", round(conf * 100, 2), "%")
