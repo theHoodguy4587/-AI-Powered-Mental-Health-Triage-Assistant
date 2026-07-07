@@ -1,14 +1,15 @@
 import joblib
 import numpy as np
-from preprocess import clean_text
+from pathlib import Path
+from src.preprocess import clean_text
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MODEL_PATH = PROJECT_ROOT / "models" / "logistic_regression_model.pkl"
+VECTORIZER_PATH = PROJECT_ROOT / "models" / "tfidf_vectorizer.pkl"
 
-# Load trained artifacts
-
-
-model = joblib.load("models/logistic_regression_model.pkl")
-tfidf = joblib.load("models/tfidf_vectorizer.pkl")
+model = joblib.load(MODEL_PATH)
+tfidf = joblib.load(VECTORIZER_PATH)
 
 
 # Prediction function
@@ -36,6 +37,34 @@ def predict_text(text):
         confidence = None
 
     return prediction, confidence
+
+
+def predict_text_details(text):
+    """
+    Predict class, confidence, and per-class probabilities for a given input text.
+    """
+
+    cleaned = clean_text(text)
+    vector = tfidf.transform([cleaned])
+    prediction = model.predict(vector)[0]
+
+    probabilities = {}
+    confidence = None
+
+    if hasattr(model, "predict_proba"):
+        probs = model.predict_proba(vector)[0]
+        probabilities = {
+            class_name: float(probability)
+            for class_name, probability in zip(model.classes_, probs)
+        }
+        confidence = float(np.max(probs))
+
+    return {
+        "prediction": prediction,
+        "confidence": confidence,
+        "probabilities": probabilities,
+        "cleaned_text": cleaned,
+    }
 
 
 # Example usage
